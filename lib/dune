@@ -1,0 +1,9 @@
+(library
+ (name ToyCtest)
+ (public_name ToyCtest)
+ (modules parser lexer ast ast_printer semantic ir ir_gen ir_printer))
+
+(ocamllex lexer)
+
+(menhir
+ (modules parser))

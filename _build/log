@@ -1,0 +1,16 @@
+# dune exec ./_build/default/bin/main.exe -- test/test1.c
+# OCAMLPARAM: unset
+# Shared cache: enabled-except-user-rules
+# Shared cache location: /home/lenovo/.cache/dune/db
+# Workspace root: /home/lenovo/ToyC/ToyCtest_v728
+# Auto-detected concurrency: 16
+# Dune context:
+#  { name = "default"
+#  ; kind = "default"
+#  ; profile = Dev
+#  ; merlin = true
+#  ; fdo_target_exe = None
+#  ; build_dir = In_build_dir "default"
+#  ; instrument_with = []
+#  }
+$ /home/lenovo/.opam/default/bin/ocamlc.opt -config > /tmp/dune_a41673_output
