@@ -10,8 +10,14 @@ type env = {
   continue_label: string option; (* 当前循环的开始标签 *)
 }
 
+
 (* 创建初始环境 *)
-let make_env () = { temp_counter = 0; label_counter = 0 }
+let make_env () = {
+  temp_counter = 0;
+  label_counter = 0;
+  break_label = None;
+  continue_label = None;
+}
 
 (* 生成一个新的临时变量操作数 *)
 let new_temp env =
