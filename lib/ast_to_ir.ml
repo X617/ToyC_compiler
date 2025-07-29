@@ -98,12 +98,16 @@ let rec gen_stmt env stmt : instr list =
       let (_, instrs) = gen_expr env e in
       instrs
 
-  | VarDecl (_, _, _) ->
-      (* 变量声明暂时不生成 IR 指令。
-         内存分配（如栈帧调整）在后端代码生成阶段处理。
-         带初始化由 Assign 语句处理。
-     *)
-      []
+  | VarDecl (_, id, init_opt) ->
+      (match init_opt with
+      | Some init_expr ->
+          (* 如果有初始化表达式，就生成和 Assign 一样的代码 *)
+          let (e_op, e_instrs) = gen_expr env init_expr in
+          let store_instr = Store { dest_addr = Name id; src = e_op } in
+          e_instrs @ [store_instr]
+      | None ->
+          []
+      )
 
   | Assign (id, e) ->
       (* 计算右侧表达式 *)
@@ -138,32 +142,39 @@ let rec gen_stmt env stmt : instr list =
       )
 
   | While (cond, body) ->
-      let label_start = new_label env in
-      let label_body = new_label env in
-      let label_end = new_label env in
+    let label_start = new_label env in (* 循环开始/条件判断 *)
+    let label_body = new_label env in  (* 循环体 *)
+    let label_end = new_label env in   (* 循环结束 *)
 
-      let (cond_op, cond_instrs) = gen_expr env cond in
-      let cjump_instr = CJump { cond = cond_op; label_true = label_body; label_false = label_end } in
-      
-      let body_instrs = gen_stmt env body in
+    (* 创建一个包含循环上下文的新环境 *)
+    let loop_env = { env with
+      break_label = Some label_end;
+      continue_label = Some label_start;
+    } in
 
-      [Label label_start]
-      @ cond_instrs
-      @ [cjump_instr]
-      @ [Label label_body]
-      @ body_instrs
-      @ [Jump label_start] (* 循环回到开始处重新判断条件 *)
-      @ [Label label_end]
+    let (cond_op, cond_instrs) = gen_expr loop_env cond in
+    let cjump_instr = CJump { cond = cond_op; label_true = label_body; label_false = label_end } in
+    
+    (* 使用 loop_env 来生成循环体的指令 *)
+    let body_instrs = gen_stmt loop_env body in
+
+    [Label label_start]
+    @ cond_instrs
+    @ [cjump_instr]
+    @ [Label label_body]
+    @ body_instrs
+    @ [Jump label_start] (* 循环回到开始处 *)
+    @ [Label label_end]
 
   | Break ->
-      (* 这是一个简化的实现。一个完整的实现需要环境知道当前循环的
-         'end' 标签是什么。我们暂时假定它不生成指令，由优化阶段处理，
-         或者需要更复杂的环境来传递标签。*)
-      [] 
+    (match env.break_label with
+    | Some lbl -> [Jump lbl]
+    | None -> failwith "语义分析阶段应已捕获此错误: break 不在循环内")
 
   | Continue ->
-      (* 同 Break *)
-      [] 
+    (match env.continue_label with
+    | Some lbl -> [Jump lbl]
+    | None -> failwith "语义分析阶段应已捕获此错误: continue 不在循环内") 
 
   | Return e_opt ->
       (match e_opt with
