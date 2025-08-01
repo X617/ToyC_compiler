@@ -138,7 +138,7 @@ let main () =
   Arg.parse speclist (fun _ -> ()) usage_msg;
 
   (* -- 2. 从 stdin 读取输入并进行词法/语法分析 -- *)
-  print_endline "1. 正在从标准输入读取并解析...";
+  prerr_endline "1. 正在从标准输入读取并解析...";
   let input = read_all_input () in
 
   let lexbuf = Lexing.from_string input in
@@ -156,11 +156,11 @@ let main () =
     );
 
     (* 步骤 2: 语义分析 *)
-    print_endline "\n2. 正在进行语义分析...";
+    prerr_endline "1. 正在从标准输入读取并解析...";
     Semantic.check_program ast;
 
     (* 步骤 3: IR 生成 *)
-    print_endline "\n3. 正在生成中间表示 (IR)...";
+    prerr_endline "\n3. 正在生成中间表示 (IR)...";
     let ir = Ast_to_ir.generate ast in
 
     (* (可选) 打印 IR *)
@@ -170,7 +170,7 @@ let main () =
       print_endline ir_string
     );
 
-    print_endline "\n编译流程完成!";
+    prerr_endline "\n编译流程完成!";
     exit 0
 
   with
@@ -193,3 +193,4 @@ let main () =
 
 (* 程序入口点 *)
 let () = main ()
+
