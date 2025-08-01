@@ -107,7 +107,7 @@ let () = main () *)
 
 open ToyCtest
 
-(* Read all from stdin *)
+(* Read all input from stdin *)
 let read_all_input () =
   let rec aux acc =
     try
@@ -117,46 +117,39 @@ let read_all_input () =
   in
   aux []
 
-(* Parse program from string input *)
+(* Parse program from a string *)
 let parse_program (s : string) =
   let lexbuf = Lexing.from_string s in
   lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = "stdin" };
   try
     Parser.program Lexer.token lexbuf
-  with Parser.Error ->
-    let pos = lexbuf.lex_curr_p in
-    let tok = Lexing.lexeme lexbuf in
-    Printf.eprintf "Syntax error at line %d, column %d: unexpected token '%s'\n"
-      pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) tok;
-    exit 1
+  with
+  | Lexer.Error msg ->
+      let pos = lexbuf.lex_curr_p in
+      Printf.eprintf "Lexical error at line %d, column %d: %s\n"
+        pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) msg;
+      exit 1
+  | Parser.Error ->
+      let pos = lexbuf.lex_curr_p in
+      let tok = Lexing.lexeme lexbuf in
+      Printf.eprintf "Syntax error at line %d, column %d: unexpected token '%s'\n"
+        pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) tok;
+      exit 1
 
 let () =
   Printexc.record_backtrace true;
 
-  (* Parse command-line options *)
-  let args = Array.to_list Sys.argv |> List.tl in
-  let print_ast = List.mem "-p-ast" args in
-  let print_ir  = List.mem "-p-ir" args in
-  let print_asm = List.mem "-p-asm" args in
+  let source = read_all_input () in
 
-  (* Read input from stdin *)
-  let input = read_all_input () in
-
-  (* Parse AST *)
+  (* Step 1: parse *)
   let ast =
-    try parse_program input
-    with Lexer.Error msg ->
-      let pos = Lexing.(lexeme_start_p (from_string input)) in
-      Printf.eprintf "Lexical error at line %d, column %d: %s\n"
-        pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) msg;
+    try parse_program source
+    with Semantic.SemanticError msg ->
+      Printf.eprintf "Semantic error: %s\n" msg;
       exit 1
   in
 
-  if print_ast then (
-    Printf.printf "AST:\n\n%s\n\n" (Ast_printer.string_of_comp_unit ast)
-  );
-
-  (* Semantic analysis *)
+  (* Step 2: semantic check *)
   begin
     try Semantic.check_program ast
     with Semantic.SemanticError msg ->
@@ -164,15 +157,12 @@ let () =
       exit 1
   end;
 
-  (* IR generation *)
+  (* Step 3: IR generation *)
   let ir = Ast_to_ir.generate ast in
 
-  if print_ir then (
-    Printf.printf "IR:\n\n%s\n\n" (Ir_printer.string_of_ir_program ir)
-  );
+  (* Step 4: IR to assembly *)
+  let asm = Ir_to_asm.compile_program ir in
 
-  if print_asm then (
-    let asm = Ir_to_asm.compile_program ir in
-    Printf.printf "ASM:\n\n%s\n" asm
-  )
+  (* Step 5: print to stdout *)
+  Printf.printf "%s\n" asm
 
