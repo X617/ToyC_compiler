@@ -101,20 +101,17 @@ let rec gen_stmt env stmt : instr list =
   | VarDecl (_, id, init_opt) ->
       (match init_opt with
       | Some init_expr ->
-          (* 如果有初始化表达式，就生成和 Assign 一样的代码 *)
           let (e_op, e_instrs) = gen_expr env init_expr in
-          let store_instr = Store { dest_addr = Name id; src = e_op } in
-          e_instrs @ [store_instr]
+          let move_instr = Move { dest = Name id; src = e_op } in
+          e_instrs @ [move_instr]
       | None ->
           []
       )
 
   | Assign (id, e) ->
-      (* 计算右侧表达式 *)
       let (e_op, e_instrs) = gen_expr env e in
-      (* 生成 Store 指令将结果存回变量 *)
-      let store_instr = Store { dest_addr = Name id; src = e_op } in
-      e_instrs @ [store_instr]
+      let move_instr = Move { dest = Name id; src = e_op } in
+      e_instrs @ [move_instr]
 
   | If (cond, then_stmt, else_opt) ->
       let label_true = new_label env in

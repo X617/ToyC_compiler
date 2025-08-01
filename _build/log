@@ -1,8 +1,8 @@
-# dune exec ./_build/default/bin/main.exe -- test/test1.c
+# dune exec ToyCtest -- -p-asm test/compiler_inputs/15_multiple_return_paths.tc
 # OCAMLPARAM: unset
 # Shared cache: enabled-except-user-rules
-# Shared cache location: /home/lenovo/.cache/dune/db
-# Workspace root: /home/lenovo/ToyC/ToyCtest_v728
+# Shared cache location: /home/www/.cache/dune/db
+# Workspace root: /home/www/Desktop/My_compiler
 # Auto-detected concurrency: 16
 # Dune context:
 #  { name = "default"
@@ -13,4 +13,4 @@
 #  ; build_dir = In_build_dir "default"
 #  ; instrument_with = []
 #  }
-$ /home/lenovo/.opam/default/bin/ocamlc.opt -config > /tmp/dune_a41673_output
+$ /home/www/.opam/4.14.0/bin/ocamlc.opt -config > /tmp/dune_8452ce_output
