@@ -269,7 +269,6 @@ let check_program (prog: Ast.comp_unit) =
     (* 第二遍：逐个检查每个函数体内部的逻辑 *)
     List.iter (check_func_def env_with_funcs) prog;
     
-    print_endline "语义分析通过！"
   with
   | SemanticError msg ->
     Printf.eprintf "语义错误: %s\n" msg;
