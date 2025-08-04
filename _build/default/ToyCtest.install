@@ -9,6 +9,7 @@ lib: [
   "_build/install/default/lib/ToyCtest/dune-package"
   "_build/install/default/lib/ToyCtest/ir.ml"
   "_build/install/default/lib/ToyCtest/ir_printer.ml"
+  "_build/install/default/lib/ToyCtest/ir_to_asm.ml"
   "_build/install/default/lib/ToyCtest/lexer.ml"
   "_build/install/default/lib/ToyCtest/opam"
   "_build/install/default/lib/ToyCtest/parser.ml"
@@ -33,6 +34,9 @@ lib: [
   "_build/install/default/lib/ToyCtest/toyCtest__Ir_printer.cmi"
   "_build/install/default/lib/ToyCtest/toyCtest__Ir_printer.cmt"
   "_build/install/default/lib/ToyCtest/toyCtest__Ir_printer.cmx"
+  "_build/install/default/lib/ToyCtest/toyCtest__Ir_to_asm.cmi"
+  "_build/install/default/lib/ToyCtest/toyCtest__Ir_to_asm.cmt"
+  "_build/install/default/lib/ToyCtest/toyCtest__Ir_to_asm.cmx"
   "_build/install/default/lib/ToyCtest/toyCtest__Lexer.cmi"
   "_build/install/default/lib/ToyCtest/toyCtest__Lexer.cmt"
   "_build/install/default/lib/ToyCtest/toyCtest__Lexer.cmx"
@@ -49,4 +53,7 @@ libexec: [
 ]
 bin: [
   "_build/install/default/bin/ToyCtest"
+]
+doc: [
+  "_build/install/default/doc/ToyCtest/README.md"
 ]

@@ -1,5 +1,3 @@
-(* lib/ir_printer.ml *)
-
 open Ir
 
 let string_of_operand = function
@@ -8,23 +6,17 @@ let string_of_operand = function
   | Name s -> s
 
 let string_of_instr instr =
-  (*
-   * 修正:
-   * 1. 移除了 'let open Ast in'，避免命名空间冲突。
-   * 2. 使用 Semantic 模块中定义的辅助函数来转换运算符，例如 Semantic.string_of_binop。
-   * 这样，模式匹配中的 BinOp 就明确地指向 Ir.instr 中的 BinOp，不会再有歧义。
-   *)
   match instr with
   | BinOp { dest; op; src1; src2 } ->
       Printf.sprintf "  %s = %s %s %s"
         (string_of_operand dest)
         (string_of_operand src1)
-        (Semantic.string_of_binop op) (* 明确调用 *)
+        (Semantic.string_of_binop op) 
         (string_of_operand src2)
   | UnOp { dest; op; src } ->
       Printf.sprintf "  %s = %s%s"
         (string_of_operand dest)
-        (Semantic.string_of_unop op) (* 明确调用 *)
+        (Semantic.string_of_unop op) 
         (string_of_operand src)
   | Load { dest; src_addr } ->
       Printf.sprintf "  %s = load %s" (string_of_operand dest) (string_of_operand src_addr)

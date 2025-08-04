@@ -15,6 +15,9 @@ module Ir = ToyCtest__Ir
 (** @canonical ToyCtest.Ir_printer *)
 module Ir_printer = ToyCtest__Ir_printer
 
+(** @canonical ToyCtest.Ir_to_asm *)
+module Ir_to_asm = ToyCtest__Ir_to_asm
+
 (** @canonical ToyCtest.Lexer *)
 module Lexer = ToyCtest__Lexer
 

@@ -4,12 +4,20 @@ open Ir
 (* --- 1. 环境与辅助函数 --- *)
 
 type env = {
-  mutable temp_counter: int; (* 用于生成新的临时变量 *)
+  mutable temp_counter: int;  (* 用于生成新的临时变量 *)
   mutable label_counter: int; (* 用于生成新的标签 *)
+  break_label: string option; (* 当前循环的结束标签 *)
+  continue_label: string option; (* 当前循环的开始标签 *)
 }
 
+
 (* 创建初始环境 *)
-let make_env () = { temp_counter = 0; label_counter = 0 }
+let make_env () = {
+  temp_counter = 0;
+  label_counter = 0;
+  break_label = None;
+  continue_label = None;
+}
 
 (* 生成一个新的临时变量操作数 *)
 let new_temp env =
@@ -40,10 +48,8 @@ let rec gen_expr env expr : operand * instr list =
       (Const n, [])
 
   | Var id ->
-      (* 变量需要从内存加载到临时变量中 *)
-      let dest_temp = new_temp env in
-      let load_instr = Load { dest = dest_temp; src_addr = Name id } in
-      (dest_temp, [load_instr])
+      (* 正确做法: 直接返回 Name id，不生成指令 *)
+      (Name id, [])
 
   | UnOp (op, e) ->
       let (e_op, e_instrs) = gen_expr env e in
@@ -86,23 +92,24 @@ let rec gen_stmt env stmt : instr list =
       List.map (gen_stmt env) stmts |> List.flatten
 
   | Expr e ->
-      (* 计算表达式，但忽略其结果。这对于像 `func();` 这样的调用很重要 *)
+      (* 计算表达式，但忽略其结果。处理`func();` 这样的调用 *)
       let (_, instrs) = gen_expr env e in
       instrs
 
-  | VarDecl (_, _, _) ->
-      (* 变量声明在我们的简单模型中不生成 IR 指令。
-         内存分配（如栈帧调整）将在后端代码生成阶段处理。
-         如果带初始化，由 Assign 语句处理。
-         (注：如果你的 VarDecl 也支持初始化，逻辑需要合并到这里) *)
-      []
+  | VarDecl (_, id, init_opt) ->
+      (match init_opt with
+      | Some init_expr ->
+          let (e_op, e_instrs) = gen_expr env init_expr in
+          let move_instr = Move { dest = Name id; src = e_op } in
+          e_instrs @ [move_instr]
+      | None ->
+          []
+      )
 
   | Assign (id, e) ->
-      (* 计算右侧表达式 *)
       let (e_op, e_instrs) = gen_expr env e in
-      (* 生成 Store 指令将结果存回变量 *)
-      let store_instr = Store { dest_addr = Name id; src = e_op } in
-      e_instrs @ [store_instr]
+      let move_instr = Move { dest = Name id; src = e_op } in
+      e_instrs @ [move_instr]
 
   | If (cond, then_stmt, else_opt) ->
       let label_true = new_label env in
@@ -130,32 +137,39 @@ let rec gen_stmt env stmt : instr list =
       )
 
   | While (cond, body) ->
-      let label_start = new_label env in
-      let label_body = new_label env in
-      let label_end = new_label env in
+    let label_start = new_label env in (* 循环开始/条件判断 *)
+    let label_body = new_label env in  (* 循环体 *)
+    let label_end = new_label env in   (* 循环结束 *)
 
-      let (cond_op, cond_instrs) = gen_expr env cond in
-      let cjump_instr = CJump { cond = cond_op; label_true = label_body; label_false = label_end } in
-      
-      let body_instrs = gen_stmt env body in
+    (* 创建一个包含循环上下文的新环境 *)
+    let loop_env = { env with
+      break_label = Some label_end;
+      continue_label = Some label_start;
+    } in
 
-      [Label label_start]
-      @ cond_instrs
-      @ [cjump_instr]
-      @ [Label label_body]
-      @ body_instrs
-      @ [Jump label_start] (* 循环回到开始处重新判断条件 *)
-      @ [Label label_end]
+    let (cond_op, cond_instrs) = gen_expr loop_env cond in
+    let cjump_instr = CJump { cond = cond_op; label_true = label_body; label_false = label_end } in
+    
+    (* 使用 loop_env 来生成循环体的指令 *)
+    let body_instrs = gen_stmt loop_env body in
+
+    [Label label_start]
+    @ cond_instrs
+    @ [cjump_instr]
+    @ [Label label_body]
+    @ body_instrs
+    @ [Jump label_start] (* 循环回到开始处 *)
+    @ [Label label_end]
 
   | Break ->
-      (* 这是一个简化的实现。一个完整的实现需要环境知道当前循环的
-         'end' 标签是什么。我们暂时假定它不生成指令，由优化阶段处理，
-         或者需要更复杂的环境来传递标签。*)
-      [] (* 简化处理，暂不生成 *)
+    (match env.break_label with
+    | Some lbl -> [Jump lbl]
+    | None -> failwith "语义分析阶段应已捕获此错误: break 不在循环内")
 
   | Continue ->
-      (* 同 Break *)
-      [] (* 简化处理，暂不生成 *)
+    (match env.continue_label with
+    | Some lbl -> [Jump lbl]
+    | None -> failwith "语义分析阶段应已捕获此错误: continue 不在循环内") 
 
   | Return e_opt ->
       (match e_opt with
