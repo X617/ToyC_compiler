@@ -4,6 +4,7 @@ open ToyCtest
 type print_stage =
   | Print_AST
   | Print_IR
+  | Print_ASM
   | Print_None (* 默认只检查，不打印 *)
 
 (* --- 主函数 --- *)
@@ -15,6 +16,7 @@ let main () =
   let speclist = [
     ("-p-ast", Arg.Unit (fun () -> stage_to_print := Print_AST), " 打印抽象语法树 (AST)");
     ("-p-ir", Arg.Unit (fun () -> stage_to_print := Print_IR), " 打印中间表示 (IR)");
+    ("-p-asm", Arg.Unit (fun () -> stage_to_print := Print_ASM), " 打印RISC-V汇编 (ASM)");
   ] in
 
   let usage_msg = "用法: toycc [选项] <源文件名>" in
@@ -62,11 +64,18 @@ let main () =
     print_endline "\n3. 正在生成中间表示 (IR)...";
     let ir = Ast_to_ir.generate ast in
 
-    (* (可选) 打印 IR *)
+    (* 打印 IR *)
     if !stage_to_print = Print_IR then (
       print_endline "\n--- 中间表示 (IR) ---";
       let ir_string = Ir_printer.string_of_ir_program ir in
       print_endline ir_string
+    );
+
+    (* 打印 ASM *)
+    if !stage_to_print = Print_ASM then (
+      print_endline "\n--- RISC-V 汇编 (ASM) ---";
+      let asm_string = Ir_to_asm.compile_program ir in
+      print_endline asm_string
     );
 
     print_endline "\n编译流程完成!";

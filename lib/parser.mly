@@ -27,7 +27,7 @@ open Ast
 %nonassoc LT LE GT GE 
 %left PLUS MINUS  (* 加减法是左结合 *)
 %left TIMES DIVIDE MOD (* 乘除模是左结合 *)
-%right NOT UMINUS (* 一元运算符是右结合，优先级最高。UMINUS是为一元减号设定的一个虚拟标记 *)
+%right NOT UMINUS UPLUS (* 一元运算符是右结合，优先级最高。UMINUS是为一元减号设定的一个虚拟标记，UPLUS是为一元加号设定的一个虚拟标记 *)
 
 (* 开始符号 *)
 %start <Ast.comp_unit> program
@@ -104,6 +104,7 @@ expr:
   | expr MOD expr         { BinOp(OpMod, $1, $3) }
   | NOT expr              { UnOp(OpNot, $2) }
   | MINUS expr %prec UMINUS { UnOp(OpNeg, $2) } (* 使用 %prec UMINUS 赋予其一元运算符的最高优先级 *)
+  | PLUS expr %prec UPLUS   { UnOp(OpPlus, $2) } (* 新增一元加号规则 *)
   | primary               { $1 }
 
 (* 优先级最高的表达式单元 *)

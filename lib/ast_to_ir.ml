@@ -3,20 +3,24 @@ open Ir
 
 (* --- 1. 环境与辅助函数 --- *)
 
+type ir_scope = (string, string) Hashtbl.t  (* 原始名 -> 唯一名 *)
+
 type env = {
   mutable temp_counter: int;  (* 用于生成新的临时变量 *)
-  mutable label_counter: int; (* 用于生成新的标签 *)
   break_label: string option; (* 当前循环的结束标签 *)
   continue_label: string option; (* 当前循环的开始标签 *)
+  mutable scopes: ir_scope list; (* 作用域栈，最顶层是当前作用域 *)
 }
 
+(* 全局 label 计数器，保证所有 label 唯一 *)
+let global_label_counter = ref 0
 
 (* 创建初始环境 *)
 let make_env () = {
   temp_counter = 0;
-  label_counter = 0;
   break_label = None;
   continue_label = None;
+  scopes = [Hashtbl.create 32];
 }
 
 (* 生成一个新的临时变量操作数 *)
@@ -26,10 +30,32 @@ let new_temp env =
   Temp i
 
 (* 生成一个新的标签字符串 *)
-let new_label env =
-  let i = env.label_counter in
-  env.label_counter <- i + 1;
+let new_label _env =
+  let i = !global_label_counter in
+  global_label_counter := i + 1;
   "L" ^ string_of_int i
+
+let enter_scope env =
+  env.scopes <- (Hashtbl.create 32) :: env.scopes
+
+let leave_scope env =
+  match env.scopes with
+  | _ :: tl -> env.scopes <- tl
+  | [] -> failwith "作用域栈为空"
+
+let add_var env id =
+  let unique_name = id ^ "@" ^ string_of_int (List.length env.scopes) in
+  Hashtbl.add (List.hd env.scopes) id unique_name
+
+let find_var_unique env id =
+  let rec find = function
+    | [] -> None
+    | tbl :: tl ->
+        match Hashtbl.find_opt tbl id with
+        | Some uname -> Some uname
+        | None -> find tl
+  in
+  find env.scopes
 
 (* --- 2. 表达式生成 --- *)
 
@@ -48,10 +74,9 @@ let rec gen_expr env expr : operand * instr list =
       (Const n, [])
 
   | Var id ->
-      (* 变量需要从内存加载到临时变量中 *)
-      let dest_temp = new_temp env in
-      let load_instr = Load { dest = dest_temp; src_addr = Name id } in
-      (dest_temp, [load_instr])
+      (match find_var_unique env id with
+      | Some uname -> (Name uname, [])
+      | None -> failwith ("IR生成阶段：未声明的变量 '" ^ id ^ "'"))
 
   | UnOp (op, e) ->
       let (e_op, e_instrs) = gen_expr env e in
@@ -91,7 +116,10 @@ let rec gen_stmt env stmt : instr list =
   match stmt with
   | Block stmts ->
       (* 将块内所有语句生成的指令列表连接起来 *)
-      List.map (gen_stmt env) stmts |> List.flatten
+      enter_scope env;
+      let instrs = List.map (gen_stmt env) stmts |> List.flatten in
+      leave_scope env;
+      instrs
 
   | Expr e ->
       (* 计算表达式，但忽略其结果。处理`func();` 这样的调用 *)
@@ -99,22 +127,24 @@ let rec gen_stmt env stmt : instr list =
       instrs
 
   | VarDecl (_, id, init_opt) ->
+      add_var env id;
+      let uname = match find_var_unique env id with Some u -> u | None -> assert false in
       (match init_opt with
       | Some init_expr ->
-          (* 如果有初始化表达式，就生成和 Assign 一样的代码 *)
           let (e_op, e_instrs) = gen_expr env init_expr in
-          let store_instr = Store { dest_addr = Name id; src = e_op } in
-          e_instrs @ [store_instr]
+          let move_instr = Move { dest = Name uname; src = e_op } in
+          e_instrs @ [move_instr]
       | None ->
           []
       )
 
   | Assign (id, e) ->
-      (* 计算右侧表达式 *)
-      let (e_op, e_instrs) = gen_expr env e in
-      (* 生成 Store 指令将结果存回变量 *)
-      let store_instr = Store { dest_addr = Name id; src = e_op } in
-      e_instrs @ [store_instr]
+      (match find_var_unique env id with
+      | Some uname ->
+          let (e_op, e_instrs) = gen_expr env e in
+          let move_instr = Move { dest = Name uname; src = e_op } in
+          e_instrs @ [move_instr]
+      | None -> failwith ("IR生成阶段：赋值给未声明的变量 '" ^ id ^ "'"))
 
   | If (cond, then_stmt, else_opt) ->
       let label_true = new_label env in
@@ -192,10 +222,14 @@ let rec gen_stmt env stmt : instr list =
 (* 将单个 AST 函数定义转换为 IR 函数定义 *)
 let gen_func_def (fdef: Ast.func_def) : ir_func =
   let env = make_env () in
+  List.iter (fun p -> add_var env p.pname) fdef.params;
+  let param_unames =
+    List.map (fun p -> match find_var_unique env p.pname with Some u -> u | None -> assert false) fdef.params
+  in
   let body_instrs = gen_stmt env fdef.body in
   {
     name = fdef.fname;
-    params = List.map (fun p -> p.pname) fdef.params;
+    params = param_unames;
     body = body_instrs;
   }
 

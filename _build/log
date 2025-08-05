@@ -1,8 +1,8 @@
-# dune exec ./_build/default/bin/main.exe -- test/test1.c
+# dune exec ToyCtest -- -p-asm test/compiler_inputs/20_comprehensive.tc
 # OCAMLPARAM: unset
 # Shared cache: enabled-except-user-rules
-# Shared cache location: /home/lenovo/.cache/dune/db
-# Workspace root: /home/lenovo/ToyC/ToyCtest_v728
+# Shared cache location: /home/www/.cache/dune/db
+# Workspace root: /home/www/Desktop/My_compiler
 # Auto-detected concurrency: 16
 # Dune context:
 #  { name = "default"
@@ -13,4 +13,19 @@
 #  ; build_dir = In_build_dir "default"
 #  ; instrument_with = []
 #  }
-$ /home/lenovo/.opam/default/bin/ocamlc.opt -config > /tmp/dune_a41673_output
+$ /home/www/.opam/4.14.0/bin/ocamlc.opt -config > /tmp/dune_8b52ad_output
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamldep.opt -modules -impl lib/semantic.ml) > _build/default/lib/.ToyCtest.objs/toyCtest__Semantic.impl.d
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamldep.opt -modules -impl lib/ast_printer.ml) > _build/default/lib/.ToyCtest.objs/toyCtest__Ast_printer.impl.d
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamldep.opt -modules -impl lib/ir_to_asm.ml) > _build/default/lib/.ToyCtest.objs/toyCtest__Ir_to_asm.impl.d
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlc.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -bin-annot -I lib/.ToyCtest.objs/byte -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/byte/toyCtest__Ast_printer.cmo -c -impl lib/ast_printer.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlc.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -bin-annot -I lib/.ToyCtest.objs/byte -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/byte/toyCtest__Semantic.cmo -c -impl lib/semantic.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlc.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -bin-annot -I lib/.ToyCtest.objs/byte -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/byte/toyCtest__Ir_to_asm.cmo -c -impl lib/ir_to_asm.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlc.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -bin-annot -I lib/.ToyCtest.objs/byte -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/byte/toyCtest__Ir_printer.cmo -c -impl lib/ir_printer.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -I lib/.ToyCtest.objs/byte -I lib/.ToyCtest.objs/native -intf-suffix .ml -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/native/toyCtest__Ast_printer.cmx -c -impl lib/ast_printer.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlc.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -w -32-27-26-39-8-37 -g -bin-annot -I bin/.main.eobjs/byte -I lib/.ToyCtest.objs/byte -no-alias-deps -opaque -o bin/.main.eobjs/byte/dune__exe__Main.cmi -c -intf bin/main.mli)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -I lib/.ToyCtest.objs/byte -I lib/.ToyCtest.objs/native -intf-suffix .ml -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/native/toyCtest__Ir_to_asm.cmx -c -impl lib/ir_to_asm.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -I lib/.ToyCtest.objs/byte -I lib/.ToyCtest.objs/native -intf-suffix .ml -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/native/toyCtest__Ir_printer.cmx -c -impl lib/ir_printer.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -I lib/.ToyCtest.objs/byte -I lib/.ToyCtest.objs/native -intf-suffix .ml -no-alias-deps -opaque -open ToyCtest -o lib/.ToyCtest.objs/native/toyCtest__Semantic.cmx -c -impl lib/semantic.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -w -32-27-26-39-8-37 -g -I bin/.main.eobjs/byte -I bin/.main.eobjs/native -I lib/.ToyCtest.objs/byte -I lib/.ToyCtest.objs/native -intf-suffix .ml -no-alias-deps -opaque -o bin/.main.eobjs/native/dune__exe__Main.cmx -c -impl bin/main.ml)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -g -a -o lib/ToyCtest.cmxa lib/.ToyCtest.objs/native/toyCtest.cmx lib/.ToyCtest.objs/native/toyCtest__Ast.cmx lib/.ToyCtest.objs/native/toyCtest__Semantic.cmx lib/.ToyCtest.objs/native/toyCtest__Parser.cmx lib/.ToyCtest.objs/native/toyCtest__Lexer.cmx lib/.ToyCtest.objs/native/toyCtest__Ir.cmx lib/.ToyCtest.objs/native/toyCtest__Ir_to_asm.cmx lib/.ToyCtest.objs/native/toyCtest__Ir_printer.cmx lib/.ToyCtest.objs/native/toyCtest__Ast_to_ir.cmx lib/.ToyCtest.objs/native/toyCtest__Ast_printer.cmx)
+$ (cd _build/default && /home/www/.opam/4.14.0/bin/ocamlopt.opt -w @1..3@5..28@31..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -w -32-27-26-39-8-37 -g -o bin/main.exe lib/ToyCtest.cmxa bin/.main.eobjs/native/dune__exe__Main.cmx)

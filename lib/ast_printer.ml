@@ -27,6 +27,7 @@ let string_of_binop = function
 let string_of_unop = function
   | OpNeg -> "-"
   | OpNot -> "!"
+  | OpPlus -> "+"   (* 补全一元加号 *)
 
 (* 递归函数，将表达式 AST 转换为节点风格的字符串 *)
 let rec string_of_expr = function

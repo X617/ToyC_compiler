@@ -18,6 +18,7 @@ type binop =
 type unop =
   | OpNeg   (* 算术负号, -x *)
   | OpNot   (* 逻辑非, !x *)
+  | OpPlus  (* 算术正号, +x *)   (* 新增一元加号 *)
 
 (* 表达式 *)
 type expr =
